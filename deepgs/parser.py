@@ -1,5 +1,3 @@
-# import pandas_plink
-import dask.dataframe as dd
 import pandas as pd
 
 
@@ -41,9 +39,6 @@ def load_plink_text(file_path):
     # Load the individual id values (the first two columns of ped file)
     ids = pd.read_csv(file_path + ".ped", delim_whitespace=True,
                       header=None, usecols=[0, 1], names=["FID", "IID"])
-    # # Squeeze the MultiIndex id into a single index:
-    # ids = ids["FID"].str.cat(ids["IID"], sep="+")
-    # ids.name = "ID"
 
     # Sniff for the number of columns and load only the genotype values (i.e. skipping the first 6 in ped file):
     n_cols = pd.read_csv(file_path + ".ped", delim_whitespace=True, header=None, nrows=1).shape[1]
@@ -55,69 +50,3 @@ def load_plink_text(file_path):
     ped.index = ids.set_index(ids.columns.tolist()).index
 
     return ped, map_file
-
-
-# def load_plink_text(file_path, in_memory=True):
-#     map_file = pd.read_csv(file_path + ".map", delim_whitespace=True,
-#                            header=None, names=["chr", "snp", "cm", "bp"])
-#
-#     ids = pd.read_csv(file_path + ".ped", delim_whitespace=True, header=None, usecols=[0, 1], names=["FID", "IID"])
-#     # ids = ids["FID"].str.cat(ids["IID"], sep="+")
-#     # ids.name = "ID"
-#
-#     n_cols = pd.read_csv(file_path + ".ped", delim_whitespace=True, header=None, nrows=1).shape[1]
-#     first_allele = 6
-#
-#     ped = pd.read_csv(file_path + ".ped",
-#                       delim_whitespace=True, header=None, usecols=range(first_allele, n_cols), dtype="category")
-#     ped.columns = pd.MultiIndex.from_product([map_file["snp"], [0, 1]])
-#     ped.index = ids.set_index(ids.columns.tolist()).index
-#
-#     if in_memory:
-#         return ped, map_file
-#     else:
-#         genotype = dd.read_csv(file_path + ".ped",
-#                                delim_whitespace=True, header=None, usecols=range(first_allele, n_cols),
-#                                dtype="category")
-#
-#         return genotype, map_file, ids
-
-
-# def get_subject_ids(fam, sep="_"):
-#     fam.columns = fam.columns.str.upper()
-#     subject_ids = fam["FID"].str.cat(fam["IID"], sep=sep)
-#     subject_ids.name = "ID"
-#     return subject_ids
-#
-#
-# def get_annotated_genotype(bim, fam, bed):
-#     subject_ids = get_subject_ids(fam)
-#     bed = dd.from_dask_array(bed, columns=subject_ids)
-#     # bed = bed.rename(index=dict(zip(bed.index, bim["snp"])))
-#     # bed = bed.rename(index=dict(zip(bed.index, bim[["chrom", "snp"]])))
-#     # bed = bed.set_index(bim["snp"])
-#     bed = bed.assign(snp=bim["snp"]).set_index("snp")
-#     return bed
-#
-#
-# def load_plink_binary(file_path):
-#     """
-#     Loads a set of plink files in binary format (bim, fam, map files).
-#
-#     Parameters
-#     ----------
-#     file_path: str
-#         Path to binary plink-formatted set of files.
-#         Do not include files' extension (such as (bim, fam).
-#
-#     Returns
-#     -------
-#     bim: DataFrame
-#         Alleles.
-#     fam: DataFrame
-#         Samples.
-#     bed: dask_array
-#         Genotypes.
-#     """
-#     bim, fam, bed = pandas_plink.read_plink(file_path)
-#     return bim, fam, bed
